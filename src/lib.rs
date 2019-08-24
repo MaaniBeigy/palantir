@@ -10,10 +10,10 @@
 //! concerning health status of backend servers.
 //! 
 // ----------------------------- bring Modules --------------------------------
-mod proxy;
+pub mod proxy;
 // mod pool;
-mod config;
-mod connection;
+pub mod config;
+pub mod connection;
 // mod health;
 // mod cache;
 // mod header;
@@ -29,37 +29,18 @@ extern crate clap;
 extern crate lazy_static;
 extern crate toml;
 // ------------------ bring external functions/traits -------------------------
-use std::ops::Deref;
-use std::str::FromStr;
-use log::LevelFilter;
+pub use std::ops::Deref;
+pub use std::str::FromStr;
+pub use log::LevelFilter;
 // ------------------ bring internal functions/traits -------------------------
-use config::logger::ConfigLogger;
-use connection::connection::connect_upstream;
-use connection::appargs;
+pub use crate::config::logger::ConfigLogger;
+pub use crate::connection::connection::connect_upstream;
+pub use crate::connection::appargs;
+pub use crate::proxy::proxy::PalantirProxy;
 //use pool::pool::ThreadPool;
 // ---------------------- main functions of palantir --------------------------
 /// This function ensures all statics are valid (a `deref` is enough to lazily 
 /// initialize them)
-fn ensure_states() {
+pub fn ensure_states() {
     let (_, _) = (appargs::APP_ARGS.deref(), appargs::APP_CONF.deref());
-}
-
-/// The main function running reverse proxy
-fn main() {
-    let _logger = ConfigLogger::init(
-        LevelFilter::from_str(
-            &appargs::APP_CONF.palantir.log_level).expect("invalid log level"
-            ),
-        );
-    // Ensure all states are bound
-    ensure_states();
-        actix_web::server::new(
-            || actix_web::App::new()
-                .resource("/{tail:.*}", |r| r.with_async(connect_upstream))
-            )
-            .bind(&appargs::APP_CONF.palantir.inet)
-            .unwrap()
-            .workers(appargs::APP_CONF.palantir.workers)
-            .run(); 
-    
 }
