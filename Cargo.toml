@@ -35,13 +35,12 @@ borrow = []
 fast = ["cache", "rwlock", "borrow"]
 
 [dependencies]
-hyper = "0.12.32"
-log = { version = "0.4.7", features = ["std"] }
-lazy_static = "1.3.0"
-dotenv = "0.14.1"
-actix-web = { version = "0.7.18", features = ["alpn"] }
-futures = "0.1.28"
-clap = "2.33.0"
-serde = { version = "1.0.94", features = ["derive"] }
-serde_derive = "1.0.94"
-toml = "0.5.1"
+# The latest version of the "futures" library, which has lots of utilities
+# for writing async code. Enable the "compat" feature to include the
+# functions for using futures 0.3 and async/await with the Hyper library,
+# which use futures 0.1
+futures-preview = { version = "=0.3.0-alpha.17", features = ["compat"] }
+
+# Hyper is an asynchronous HTTP library. We'll use it to power our HTTP
+# server and to make HTTP requests.
+hyper = "0.12.9"

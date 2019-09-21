@@ -1,65 +1,79 @@
-// palantir
-// HTTP REST API reverse proxy
-// Copyright: 2018, Maani Beigy <manibeygi@gmail.com>, 
-//                  AASAAM Software Group <info@aasaam.com>
-// License: MIT/Apache-2.0
-//! # palantir
-//!
-//! `palantir` is a HTTP REST API reverse proxy. It performs load balance,
-//! caching, and health check; and also prevents DDOS and reports metrics 
-//! concerning health status of backend servers.
-//! 
-// ----------------------------- bring Modules --------------------------------
-mod proxy;
-// mod pool;
-mod config;
-mod connection;
-// mod health;
-// mod cache;
-// mod header;
-// mod metrics;
-// ------------------ bring external libraries/crates -------------------------
-extern crate actix_web;
-extern crate futures;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate clap;
-#[macro_use]
-extern crate lazy_static;
-extern crate toml;
-// ------------------ bring external functions/traits -------------------------
-use std::ops::Deref;
-use std::str::FromStr;
-use log::LevelFilter;
-// ------------------ bring internal functions/traits -------------------------
-use config::logger::ConfigLogger;
-use connection::connection::connect_upstream;
-use connection::appargs;
-//use pool::pool::ThreadPool;
-// ---------------------- main functions of palantir --------------------------
-/// This function ensures all statics are valid (a `deref` is enough to lazily 
-/// initialize them)
-fn ensure_states() {
-    let (_, _) = (appargs::APP_ARGS.deref(), appargs::APP_CONF.deref());
+
+use {
+    hyper::{
+        // Miscellaneous types from Hyper for working with HTTP.
+        Body, Client, Request, Response, Server, Uri,
+        // This function turns a closure which returns a future into an
+        // implementation of the the Hyper `Service` trait, which is an
+        // asynchronous function from a generic `Request` to a `Response`
+        service::service_fn,
+        // A function which runs a future to completion using the Hyper runtime.
+        rt::run
+    },
+    futures::{
+        // Extension trait for futures 0.1 futures, adding the `.compat()` method
+        // which allows us to use `.await` on 0.1 futures.
+        compat::Future01CompatExt,
+        // Extension traits providing additional methods on futures.
+        // `FutureExt` adds methods that work for all futures, whereas
+        // `TryFutureExt` adds methods to futures that return `Result` types.
+        future::{FutureExt, TryFutureExt},
+    },
+    std::net::SocketAddr,
+    std::str::FromStr
+};
+
+fn forward_uri<B>(forward_url: &'static str, req: &Request<B>) -> Uri {
+    
+    let forward_uri = match req.uri().query() {
+        Some(query) => format!("{}{}?{}", forward_url, req.uri().path(), query),
+        None => format!("{}{}", forward_url, req.uri().path()),
+    };
+
+    Uri::from_str(forward_uri.as_str()).unwrap()
 }
 
-/// The main function running reverse proxy
+async fn call(forward_url: &'static str, mut _req: Request<Body>) -> 
+    Result<Response<Body>, hyper::Error> {
+        *_req.uri_mut() = forward_uri(forward_url, &_req);
+        let url_str = forward_uri(forward_url, &_req);
+        let res = Client::new().get(url_str).compat().await;
+        res
+}
+
+async fn run_server(forward_url: &'static str, addr: SocketAddr) {
+    let forwarded_url = forward_url;
+    let serve_future = Server::bind(&addr)
+        // Serve requests using our `async serve_req` function.
+        // `serve` takes a closure which returns a type implementing the
+        // `Service` trait. `service_fn` returns a value implementing the
+        // `Service` trait, and accepts a closure which goes from request
+        // to a future of the response. To use our `serve_req` function with
+        // Hyper, we have to box it and put it in a compatability
+        // wrapper to go from a futures 0.3 future (the kind returned by
+        // `async fn`) to a futures 0.1 future (the kind used by Hyper).
+        // .serve(|| service_fn(|req| call(forwarded_url, req).boxed().compat()));
+        .serve(|| service_fn(|req| call("http://127.0.0.1:9061", req).boxed().compat()));
+    // Wait for the server to complete serving or exit with an error.
+    // If an error occurred, print it to stderr.
+    if let Err(e) = serve_future.compat().await {
+        eprintln!("server error: {}", e);
+    }
+}
+
 fn main() {
-    let _logger = ConfigLogger::init(
-        LevelFilter::from_str(
-            &appargs::APP_CONF.palantir.log_level).expect("invalid log level"
-            ),
-        );
-    // Ensure all states are bound
-    ensure_states();
-        actix_web::server::new(
-            || actix_web::App::new()
-                .resource("/{tail:.*}", |r| r.with_async(connect_upstream))
-            )
-            .bind(&appargs::APP_CONF.palantir.inet)
-            .unwrap()
-            .workers(appargs::APP_CONF.palantir.workers)
-            .run(); 
-    
+    // Set the address to run our socket on.
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    // Set the url of backend server
+    let url: &'static str = "http://127.0.0.1:9061";
+    // Call our `run_server` function, which returns a future.
+    // As with every `async fn`, for `run_server` to do anything,
+    // the returned future needs to be run. Additionally,
+    // we need to convert the returned future from a futures 0.3 future into a
+    // futures 0.1 future.
+    let futures_03_future = run_server(url, addr);
+    let futures_01_future = futures_03_future.unit_error().boxed().compat();
+    // Finally, we can run the future to completion using the `run` function
+    // provided by Hyper.
+    run(futures_01_future);
 }

@@ -1,9 +1,9 @@
-[![Build Status](https://travis-ci.org/AASAAM/palantir.svg?branch=master)](<https://travis-ci.org/AASAAM/palantir>)
-[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/d1cmo37ht3mbha38/branch/master?svg=true)](https://ci.appveyor.com/project/MaaniBeigy/palantir-isq74/branch/master)
+[![Build Status](https://travis-ci.org/AASAAM/palantir.svg?branch=palantir-async)](<https://github.com/MaaniBeigy/palantir/tree/palantir-async>)
+[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/d1cmo37ht3mbha38/branch/palantir-async?svg=true)](https://ci.appveyor.com/project/MaaniBeigy/palantir-isq74/branch/palantir-async)
 [![License: MIT/Apache-2.0](<https://img.shields.io/badge/license-MIT%2FApache--2.0-brightgreen.svg>)](#license)
-![GitHub last commit](https://img.shields.io/github/last-commit/AASAAM/palantir.svg?color=brightgreen)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/AASAAM/palantir.svg?color=brightgreen)
-[![](<https://img.shields.io/badge/devel%20version-0.1.0-yellow.svg>)](<https://github.com/AASAAM/palantir>)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/MaaniBeigy/palantir/palantir-async)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/MaaniBeigy/palantir)
+[![](<https://img.shields.io/badge/devel%20version-0.1.0-yellow.svg>)](<https://github.com/MaaniBeigy/palantir/tree/palantir-async>)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![contributions welcome](<https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat>)](<https://github.com/AASAAM/palantir/issues>)
 [![Gitter](https://badges.gitter.im/AASAAM/palantir.svg)](https://gitter.im/AASAAM/palantir?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
@@ -27,13 +27,11 @@ curl https://sh.rustup.rs -sSf | sh
 
 For installation on Windows, read the instructions in [rust-lang book](<https://doc.rust-lang.org/book/ch01-01-installation.html#installing-rustup-on-windows>).
 
-Then, clone `palantir` repository:
+Then, clone `palantir-async` branch of the `palantir` repository:
 
 ```shell
-git clone git@github.com:AASAAM/palantir.git
+git clone --single-branch --branch palantir-async git@github.com:MaaniBeigy/palantir.git
 ```
-
-After modifying [config.toml](./config.toml) based on your upstream server:
 
 ```shell
 cd palantir
@@ -44,7 +42,12 @@ cargo run --release --features fast
 
 palantir is built in Rust, so it can be compiled to native code for your architecture. Rust, unlike some languages such as Golang, does not have a garbage collector (GC) which constantly looks for no longer used memory while the program runs. Therefore, GC is usually a bad thing for high-throughput / high-load production systems. "In Rust, memory is handled through a system of ownership with a set of rules that the compiler checks at compile time. None of the ownership features slow down your program as it is running" [(reference)](<https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html?highlight=garbage,collector#memory-and-allocation>).
 
-In early [benchmarks](./benches/README.md), we observed that palantir competes with the nginx reverse proxy.
+**This branch is an experiment on Rust's built-in async/await using 
+`futures-preview = { version = "=0.3.0-alpha.17", features = ["compat"] }` and
+`hyper = "0.12.9"`. The current benchmarks show unsatisfactory results. Moreover, 
+there are still problems with `forward_url` in `run_server` function, which 
+shows the error "returning this value requires that `forwarded_url` is borrowed for `'static`". It has been asked [here](<https://users.rust-lang.org/t/futures-error-with-method-named-then-in-a-reverse-proxy/32285/5>)**
+
 
 ### License
 
