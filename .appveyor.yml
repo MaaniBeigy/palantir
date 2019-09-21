@@ -5,16 +5,20 @@ environment:
     BITS: 64
     OPENSSL_VERSION: 1_1_1c
     OPENSSL_DIR: C:\OpenSSL
+    CHANNEL: nightly
   - TARGET: i686-pc-windows-msvc
     BITS: 32
     OPENSSL_VERSION: 1_0_2s
     OPENSSL_DIR: C:\OpenSSL
+    CHANNEL: nightly
   - TARGET: x86_64-pc-windows-gnu
     BITS: 64
     MSYS2: 1
+    CHANNEL: nightly
   - TARGET: x86_64-pc-windows-msvc
     VCPKG_DEFAULT_TRIPLET: x64-windows
     VCPKGRS_DYNAMIC: 1
+    CHANNEL: nightly
   RUST_BACKTRACE: full
 install:
 # install OpenSSL
@@ -25,10 +29,10 @@ install:
 
 # Install Rust
   - curl -sSf -o rustup-init.exe https://win.rustup.rs/
-  - rustup-init.exe -y --default-host %TARGET%
+  - rustup-init.exe --default-host %TARGET% --default-toolchain %CHANNEL% -y
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
   - if defined MSYS2 set PATH=C:\msys64\mingw%BITS%\bin;%PATH%
-  - rustc -V
+  - rustc -Vv
   - cargo -V
   - if defined VCPKG_DEFAULT_TRIPLET git clone https://github.com/Microsoft/vcpkg c:\projects\vcpkg
   - if defined VCPKG_DEFAULT_TRIPLET c:\projects\vcpkg\bootstrap-vcpkg.bat
@@ -41,4 +45,4 @@ test_script:
   - cargo test -p palantir
 branches:
   only:
-    - master
+    - palantir-async

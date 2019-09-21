@@ -42,7 +42,7 @@ async fn call(forward_url: &'static str, mut _req: Request<Body>) ->
 }
 
 async fn run_server(forward_url: &'static str, addr: SocketAddr) {
-    let forwarded_url = forward_url;
+    let _forwarded_url = forward_url;
     let serve_future = Server::bind(&addr)
         // Serve requests using our `async serve_req` function.
         // `serve` takes a closure which returns a type implementing the

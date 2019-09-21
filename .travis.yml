@@ -4,8 +4,12 @@ dist: ubuntu
 os:
   - linux
   - osx
-sudo: false
-
+sudo: required
 rust:
-  - stable
+  - nightly
+
+matrix:
+  allow_failures:
+    - rust: nightly
+
 
