@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/AASAAM/palantir.svg?branch=palantir-async)](<https://travis-ci.org/MaaniBeigy/palantir.svg?branch=palantir-async>)
+[![Build Status](https://travis-ci.org/MaaniBeigy/palantir.svg?branch=palantir-async)](<https://travis-ci.org/MaaniBeigy/palantir>)
 [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/myl3ulqywh7uuncn/branch/palantir-async?svg=true)](https://ci.appveyor.com/project/MaaniBeigy/palantir-c8jxq/branch/palantir-async)
 [![License: MIT/Apache-2.0](<https://img.shields.io/badge/license-MIT%2FApache--2.0-brightgreen.svg>)](#license)
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/MaaniBeigy/palantir/palantir-async)
