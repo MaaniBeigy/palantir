@@ -1,8 +1,8 @@
-[![Build Status](https://travis-ci.org/AASAAM/palantir.svg?branch=master)](<https://travis-ci.org/AASAAM/palantir>)
-[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/d1cmo37ht3mbha38/branch/master?svg=true)](https://ci.appveyor.com/project/MaaniBeigy/palantir-isq74/branch/master)
+[![Build Status](https://travis-ci.org/MaaniBeigy/palantir.svg?branch=palantir-x)](<https://travis-ci.org/MaaniBeigy/palantir>)
+[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/myl3ulqywh7uuncn/branch/palantir-x?svg=true)](https://ci.appveyor.com/project/MaaniBeigy/palantir-c8jxq/branch/palantir-x)
 [![License: MIT/Apache-2.0](<https://img.shields.io/badge/license-MIT%2FApache--2.0-brightgreen.svg>)](#license)
-![GitHub last commit](https://img.shields.io/github/last-commit/AASAAM/palantir.svg?color=brightgreen)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/AASAAM/palantir.svg?color=brightgreen)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/MaaniBeigy/palantir/palantir-x)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/MaaniBeigy/palantir)
 [![](<https://img.shields.io/badge/devel%20version-0.1.0-yellow.svg>)](<https://github.com/AASAAM/palantir>)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![contributions welcome](<https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat>)](<https://github.com/AASAAM/palantir/issues>)
@@ -27,10 +27,10 @@ curl https://sh.rustup.rs -sSf | sh
 
 For installation on Windows, read the instructions in [rust-lang book](<https://doc.rust-lang.org/book/ch01-01-installation.html#installing-rustup-on-windows>).
 
-Then, clone `palantir` repository:
+Then, clone `palantir-x` branch of the `palantir` repository:
 
 ```shell
-git clone git@github.com:AASAAM/palantir.git
+git clone --single-branch --branch palantir-x git@github.com:MaaniBeigy/palantir.git
 ```
 
 After modifying [config.toml](./config.toml) based on your upstream server:
@@ -44,7 +44,13 @@ cargo run --release --features fast
 
 palantir is built in Rust, so it can be compiled to native code for your architecture. Rust, unlike some languages such as Golang, does not have a garbage collector (GC) which constantly looks for no longer used memory while the program runs. Therefore, GC is usually a bad thing for high-throughput / high-load production systems. "In Rust, memory is handled through a system of ownership with a set of rules that the compiler checks at compile time. None of the ownership features slow down your program as it is running" [(reference)](<https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html?highlight=garbage,collector#memory-and-allocation>).
 
-In early [benchmarks](./benches/README.md), we observed that palantir competes with the nginx reverse proxy.
+**palantir-x is an experimental branch using 
+`actix-web = { version = "1.0.0", features=["ssl"] }` and
+`futures = "0.1.25"`. The current benchmarks show satisfactory results 
+(more than 2x RPS than nginx reverse proxy). Moreover, 
+there is a big dependency tree, which makes it a bad design for our use case. we 
+may abandon this branch or try to re-implement the imported functions from actix
+and actix-web, but developing only the necessary modules and functions**
 
 ### License
 

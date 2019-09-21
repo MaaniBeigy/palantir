@@ -1,65 +1,65 @@
-// palantir
-// HTTP REST API reverse proxy
-// Copyright: 2018, Maani Beigy <manibeygi@gmail.com>, 
-//                  AASAAM Software Group <info@aasaam.com>
-// License: MIT/Apache-2.0
-//! # palantir
-//!
-//! `palantir` is a HTTP REST API reverse proxy. It performs load balance,
-//! caching, and health check; and also prevents DDOS and reports metrics 
-//! concerning health status of backend servers.
-//! 
-// ----------------------------- bring Modules --------------------------------
-mod proxy;
-// mod pool;
-mod config;
-mod connection;
-// mod health;
-// mod cache;
-// mod header;
-// mod metrics;
-// ------------------ bring external libraries/crates -------------------------
-extern crate actix_web;
-extern crate futures;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate clap;
-#[macro_use]
-extern crate lazy_static;
-extern crate toml;
-// ------------------ bring external functions/traits -------------------------
-use std::ops::Deref;
-use std::str::FromStr;
-use log::LevelFilter;
-// ------------------ bring internal functions/traits -------------------------
-use config::logger::ConfigLogger;
-use connection::connection::connect_upstream;
-use connection::appargs;
-//use pool::pool::ThreadPool;
-// ---------------------- main functions of palantir --------------------------
-/// This function ensures all statics are valid (a `deref` is enough to lazily 
-/// initialize them)
-fn ensure_states() {
-    let (_, _) = (appargs::APP_ARGS.deref(), appargs::APP_CONF.deref());
+use actix_web::client::Client;
+use actix_web::{middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer};
+use futures::Future;
+use std::net::ToSocketAddrs;
+use url::Url;
+
+fn forward(
+    req: HttpRequest,
+    payload: web::Payload,
+    url: web::Data<Url>,
+    client: web::Data<Client>,
+) -> impl Future<Item = HttpResponse, Error = Error> {
+    let mut new_url = url.get_ref().clone();
+    new_url.set_path(req.uri().path());
+    new_url.set_query(req.uri().query());
+
+    let forwarded_req = client
+        .request_from(new_url.as_str(), req.head())
+        .no_decompress();
+    let forwarded_req = if let Some(addr) = req.head().peer_addr {
+        forwarded_req.header("x-forwarded-for", format!("{}", addr.ip()))
+    } else {
+        forwarded_req
+    };
+
+    forwarded_req
+        .send_stream(payload)
+        .map_err(Error::from)
+        .map(|res| {
+            let mut client_resp = HttpResponse::build(res.status());
+            for (header_name, header_value) in res
+                .headers()
+                .iter()
+                .filter(|(h, _)| *h != "connection" && *h != "content-length")
+            {
+                client_resp.header(header_name.clone(), header_value.clone());
+            }
+            client_resp.streaming(res)
+        })
 }
 
-/// The main function running reverse proxy
-fn main() {
-    let _logger = ConfigLogger::init(
-        LevelFilter::from_str(
-            &appargs::APP_CONF.palantir.log_level).expect("invalid log level"
-            ),
-        );
-    // Ensure all states are bound
-    ensure_states();
-        actix_web::server::new(
-            || actix_web::App::new()
-                .resource("/{tail:.*}", |r| r.with_async(connect_upstream))
-            )
-            .bind(&appargs::APP_CONF.palantir.inet)
-            .unwrap()
-            .workers(appargs::APP_CONF.palantir.workers)
-            .run(); 
+fn main() -> std::io::Result<()> {
     
+    let forward_url = Url::parse(&format!(
+        "https://{}",
+        ("127.0.0.1", 9062)
+            .to_socket_addrs()
+            .unwrap()
+            .next()
+            .unwrap()
+    ))
+    .unwrap();
+
+    HttpServer::new(move || {
+        App::new()
+            .data(Client::new())
+            .data(forward_url.clone())
+            .wrap(middleware::Logger::default())
+            .default_service(web::route().to_async(forward))
+    })
+    .bind(("0.0.0.0", 8080))?
+    .system_exit()
+    .workers(4)
+    .run()
 }
