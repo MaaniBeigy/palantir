@@ -46,7 +46,7 @@ palantir is built in Rust, so it can be compiled to native code for your archite
 `futures-preview = { version = "=0.3.0-alpha.17", features = ["compat"] }` and
 `hyper = "0.12.9"`. The current benchmarks show unsatisfactory results. Moreover, 
 there are still problems with `forward_url` in `run_server` function, which 
-shows the error "returning this value requires that `forwarded_url` is borrowed for `'static`". It has been asked [here](<https://users.rust-lang.org/t/futures-error-with-method-named-then-in-a-reverse-proxy/32285/5>)**
+shows the error "returning this value requires that `forwarded_url` is borrowed for `'static`". It has been asked [here](<https://users.rust-lang.org/t/futures-error-with-method-named-then-in-a-reverse-proxy/32285/5>)**.
 
 
 ### License

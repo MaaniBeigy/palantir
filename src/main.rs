@@ -42,7 +42,7 @@ async fn call(forward_url: &'static str, mut _req: Request<Body>) ->
 }
 
 async fn run_server(forward_url: &'static str, addr: SocketAddr) {
-    let _forwarded_url = forward_url;
+    let forwarded_url = forward_url;
     let serve_future = Server::bind(&addr)
         // Serve requests using our `async serve_req` function.
         // `serve` takes a closure which returns a type implementing the
@@ -53,7 +53,7 @@ async fn run_server(forward_url: &'static str, addr: SocketAddr) {
         // wrapper to go from a futures 0.3 future (the kind returned by
         // `async fn`) to a futures 0.1 future (the kind used by Hyper).
         // .serve(|| service_fn(|req| call(forwarded_url, req).boxed().compat()));
-        .serve(|| service_fn(|req| call("http://127.0.0.1:9061", req).boxed().compat()));
+        .serve(|| service_fn(move |req| call(forwarded_url, req).boxed().compat()));
     // Wait for the server to complete serving or exit with an error.
     // If an error occurred, print it to stderr.
     if let Err(e) = serve_future.compat().await {
@@ -64,8 +64,7 @@ async fn run_server(forward_url: &'static str, addr: SocketAddr) {
 fn main() {
     // Set the address to run our socket on.
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    // Set the url of backend server
-    let url: &'static str = "http://127.0.0.1:9061";
+    let url = "http://127.0.0.1:9061";
     // Call our `run_server` function, which returns a future.
     // As with every `async fn`, for `run_server` to do anything,
     // the returned future needs to be run. Additionally,
