@@ -43,11 +43,10 @@ cargo run --release --features fast
 palantir is built in Rust, so it can be compiled to native code for your architecture. Rust, unlike some languages such as Golang, does not have a garbage collector (GC) which constantly looks for no longer used memory while the program runs. Therefore, GC is usually a bad thing for high-throughput / high-load production systems. "In Rust, memory is handled through a system of ownership with a set of rules that the compiler checks at compile time. None of the ownership features slow down your program as it is running" [(reference)](<https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html?highlight=garbage,collector#memory-and-allocation>).
 
 **This branch is an experiment on Rust's built-in async/await using 
-`futures-preview = { version = "=0.3.0-alpha.17", features = ["compat"] }` and
-`hyper = "0.12.9"`. The current benchmarks show unsatisfactory results. Moreover, 
-there are still problems with `forward_url` in `run_server` function, which 
-shows the error "returning this value requires that `forwarded_url` is borrowed for `'static`". It has been asked [here](<https://users.rust-lang.org/t/futures-error-with-method-named-then-in-a-reverse-proxy/32285/5>)**.
-
+`futures-preview = { version = "0.3.0-alpha.17", features = ["compat"] }` and
+`hyper = "0.12.9"`. The current benchmarks show unsatisfactory results**. To
+improve, we need to use `hyper = "0.13.0-alpha.1"` instead of `hyper = "0.12.9"`
+to avoid the need for converting `futures 0.3` to `future 0.1`
 
 ### License
 
