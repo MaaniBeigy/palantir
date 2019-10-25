@@ -35,12 +35,6 @@ borrow = []
 fast = ["cache", "rwlock", "borrow"]
 
 [dependencies]
-# The latest version of the "futures" library, which has lots of utilities
-# for writing async code. Enable the "compat" feature to include the
-# functions for using futures 0.3 and async/await with the Hyper library,
-# which use futures 0.1
-futures-preview = { version = "0.3.0-alpha.17", features = ["compat"] }
-
-# Hyper is an asynchronous HTTP library. We'll use it to power our HTTP
-# server and to make HTTP requests.
-hyper = "0.12.9"
+futures-preview = { version = "0.3.0-alpha.19", features = ["async-await"]}
+hyper = "0.13.0-alpha.4"
+tokio = "=0.2.0-alpha.6"
